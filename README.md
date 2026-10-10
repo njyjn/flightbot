@@ -20,12 +20,21 @@ into the environment variables ultrafeeder expects.
 | Option | Default | Notes |
 |---|---|---|
 | `latitude`, `longitude`, `altitude_m` | Home Assistant home location | Antenna position; used for range and distance |
+| `local_sdr` | `true` | Set `false` when the stick is on another device and data comes in via `ultrafeeder_config` |
 | `gain` | `auto` | readsb built-in autogain; or a fixed dB value |
 | `device_serial` | unset | Only needed with more than one RTL-SDR attached |
 | `ppm` | unset | Frequency correction |
 | `enable_aircraft_db` | `true` | Adds registration and type to `aircraft.json` (~50 MB RAM) |
 | `history_days` | `1` | Days of track and heatmap history to keep in `/data/globe_history`; purged daily |
 | `ultrafeeder_config` | unset | Raw `ULTRAFEEDER_CONFIG` string for feeding aggregators |
+
+## Remote receiver
+
+To put the stick at a window on a separate small device (for example a Pi Zero
+running only `readsb`), set `local_sdr: false` and
+`ultrafeeder_config: "adsb,<receiver-ip>,30005,beast_in"`. The map, graphs and
+Home Assistant sensors then use the remote data. Only decoded messages cross
+the network (a few kB/s), so 2.4 GHz Wi-Fi is enough.
 
 ## Storage
 

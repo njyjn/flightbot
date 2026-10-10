@@ -1,5 +1,5 @@
 name: "FlightBot"
-version: "0.1.1"
+version: "0.1.2"
 slug: "flightbot"
 description: "ADS-B receiver (readsb + tar1090) for an RTL-SDR stick such as the RadarBox FlightStick"
 url: "https://github.com/njyjn/flightbot"
@@ -22,10 +22,12 @@ ports_description:
 webui: "http://[HOST]:[PORT:80]/"
 watchdog: "http://[HOST]:[PORT:80]/data/aircraft.json"
 options:
+  local_sdr: true
   gain: "auto"
   enable_aircraft_db: true
   history_days: 1
 schema:
+  local_sdr: "bool"
   latitude: "float?"
   longitude: "float?"
   altitude_m: "float?"

@@ -40,8 +40,14 @@ fi
 [[ -n "$lon" ]] && setenv READSB_LON "$lon"
 [[ -n "$alt" ]] && setenv READSB_ALT "${alt}m"
 
-setenv READSB_DEVICE_TYPE rtlsdr
-setenv READSB_GAIN "$(opt gain)"
+# local_sdr=false: no stick on this host; data arrives over the network via
+# ultrafeeder_config (e.g. adsb,<receiver-ip>,30005,beast_in).
+if [[ "$(jq -r '.local_sdr' "$OPTIONS")" == "false" ]]; then
+    setenv READSB_NET_ONLY true
+else
+    setenv READSB_DEVICE_TYPE rtlsdr
+    setenv READSB_GAIN "$(opt gain)"
+fi
 
 serial=$(opt device_serial)
 [[ -n "$serial" ]] && setenv READSB_RTLSDR_DEVICE "$serial"
