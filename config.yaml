@@ -1,0 +1,37 @@
+name: "FlightBot"
+version: "0.1.0"
+slug: "flightbot"
+description: "ADS-B receiver (readsb + tar1090) for an RTL-SDR stick such as the RadarBox FlightStick"
+url: "https://github.com/njyjn/flightbot"
+image: ghcr.io/njyjn/flightbot
+startup: services
+boot: auto
+# The ultrafeeder image runs s6-overlay v3, which must be PID 1.
+init: false
+# Maps /dev/bus/usb so readsb can open the RTL-SDR dongle, including after a replug.
+usb: true
+homeassistant_api: true
+ports:
+  80/tcp: 8090
+  30003/tcp: null
+  30005/tcp: null
+ports_description:
+  80/tcp: "tar1090 map and /data/aircraft.json"
+  30003/tcp: "SBS/BaseStation output (for other feeders)"
+  30005/tcp: "Beast output (for other feeders, e.g. RadarBox)"
+webui: "http://[HOST]:[PORT:80]/"
+watchdog: "http://[HOST]:[PORT:80]/data/aircraft.json"
+options:
+  gain: "auto"
+  enable_aircraft_db: true
+schema:
+  latitude: "float?"
+  longitude: "float?"
+  altitude_m: "float?"
+  gain: "str"
+  device_serial: "str?"
+  ppm: "int?"
+  enable_aircraft_db: "bool"
+  ultrafeeder_config: "str?"
+arch:
+  - aarch64

@@ -1,0 +1,57 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+#
+# Translate the Home Assistant app options in /data/options.json into the
+# environment variables ultrafeeder reads. Every later startup.d script and
+# s6 service is started through with-contenv, which rereads this directory.
+
+set -euo pipefail
+
+OPTIONS=/data/options.json
+ENVDIR=/run/s6/container_environment
+
+if [[ ! -f "$OPTIONS" ]]; then
+    echo "No $OPTIONS; not running under Home Assistant, leaving environment as is"
+    exit 0
+fi
+
+opt() { jq -r --arg k "$1" '.[$k] // empty' "$OPTIONS"; }
+
+setenv() {
+    printf '%s' "$2" > "$ENVDIR/$1"
+    echo "$1 set"
+}
+
+# Location: explicit options win, otherwise fall back to the Home Assistant home location.
+lat=$(opt latitude)
+lon=$(opt longitude)
+alt=$(opt altitude_m)
+if [[ -z "$lat" || -z "$lon" || -z "$alt" ]] && [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+    if core=$(curl -fsS -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" http://supervisor/core/api/config); then
+        [[ -z "$lat" ]] && lat=$(jq -r '.latitude // empty' <<< "$core")
+        [[ -z "$lon" ]] && lon=$(jq -r '.longitude // empty' <<< "$core")
+        [[ -z "$alt" ]] && alt=$(jq -r '.elevation // empty' <<< "$core")
+        echo "Filled missing location from Home Assistant core config"
+    else
+        echo "WARNING: could not read Home Assistant core config; set latitude/longitude in the app options"
+    fi
+fi
+[[ -n "$lat" ]] && setenv READSB_LAT "$lat"
+[[ -n "$lon" ]] && setenv READSB_LON "$lon"
+[[ -n "$alt" ]] && setenv READSB_ALT "${alt}m"
+
+setenv READSB_DEVICE_TYPE rtlsdr
+setenv READSB_GAIN "$(opt gain)"
+
+serial=$(opt device_serial)
+[[ -n "$serial" ]] && setenv READSB_RTLSDR_DEVICE "$serial"
+
+ppm=$(opt ppm)
+[[ -n "$ppm" ]] && setenv READSB_RTLSDR_PPM "$ppm"
+
+[[ "$(opt enable_aircraft_db)" == "true" ]] && setenv TAR1090_ENABLE_AC_DB true
+
+uf=$(opt ultrafeeder_config)
+[[ -n "$uf" ]] && setenv ULTRAFEEDER_CONFIG "$uf"
+
+exit 0
