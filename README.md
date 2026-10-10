@@ -24,7 +24,15 @@ into the environment variables ultrafeeder expects.
 | `device_serial` | unset | Only needed with more than one RTL-SDR attached |
 | `ppm` | unset | Frequency correction |
 | `enable_aircraft_db` | `true` | Adds registration and type to `aircraft.json` (~50 MB RAM) |
+| `history_days` | `1` | Days of track and heatmap history to keep in `/data/globe_history`; purged daily |
 | `ultrafeeder_config` | unset | Raw `ULTRAFEEDER_CONFIG` string for feeding aggregators |
+
+## Storage
+
+Track history, heatmaps, readsb state and the graphs1090 database live in the
+app's `/data` folder, so they survive restarts and updates and are included in
+Home Assistant backups. Dated history is purged after `history_days`;
+graphs1090 uses fixed-size round-robin files that do not grow.
 
 ## Ports
 

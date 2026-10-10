@@ -51,6 +51,25 @@ ppm=$(opt ppm)
 
 [[ "$(opt enable_aircraft_db)" == "true" ]] && setenv TAR1090_ENABLE_AC_DB true
 
+# Keep track history, heatmaps and graphs1090 data in /data so they survive
+# app restarts and updates (the Supervisor recreates the container on every
+# start). On first run, seed /data with whatever the image ships at that path.
+persist() {
+    local src=$1 dst=$2
+    [[ -L "$src" ]] && return 0
+    if [[ ! -d "$dst" ]]; then
+        if [[ -d "$src" ]]; then cp -a "$src" "$dst"; else mkdir -p "$dst"; fi
+    fi
+    rm -rf "$src"
+    ln -s "$dst" "$src"
+    echo "$src persisted to $dst"
+}
+persist /var/globe_history /data/globe_history
+persist /var/lib/collectd /data/collectd
+
+# Expire dated track/heatmap history; readsb state and graphs1090 RRDs are fixed size.
+setenv MAX_GLOBE_HISTORY "$(opt history_days)"
+
 uf=$(opt ultrafeeder_config)
 [[ -n "$uf" ]] && setenv ULTRAFEEDER_CONFIG "$uf"
 
